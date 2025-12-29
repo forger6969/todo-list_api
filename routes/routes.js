@@ -1,7 +1,7 @@
 const express = require('express')
 const routes = express.Router()
 
-const {createTask , getAll , setStatus , getById , setTitle} = require('../controllers/Task.controller');
+const {createTask , getAll , setStatus , getById } = require('../controllers/Task.controller');
 const { route } = require('../app');
 console.log(createTask , getAll );
 
@@ -142,7 +142,6 @@ routes.patch('/setTask/:id', setStatus);
  *       404:
  *         description: Task not found
  */
-routes.patch('/task/:id', setTitle);
 
 
 module.exports = routes

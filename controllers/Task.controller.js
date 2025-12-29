@@ -1,93 +1,73 @@
 const Task = require('../models/Task')
 const {writeDB , readDB}  = require('../utils/fileDB')
 
-const createTask = (req , res) =>{
-    const {title} = req.body
+const createTask = async (req , res) =>{
+try {
+      const {title} = req.body
 
-    if (!title) {
-    return res.status(400).send({"message":"Title is required"})
-    }
+      if (!title) {
+       return res.status(400).json({"message":"Title is required"})
+      }
 
-    const db = readDB()
-    const newTask = new Task(title)
-    db.tasks.push(newTask)
+const task = new Task({title})
+task.save()
 
-    writeDB(db)
+res.status(201).json({"message":"Task is created" , task})
 
-    res.status(200).send({"message":"Task created!" , newTask})
-}
-
-const getAll = (req , res) =>{
-    const db = readDB()
-    res.json(db.tasks)
-}
-
-const setStatus = (req , res) => {
-    const {id} = req.params
-const {completed} = req.body
-
-
-const db = readDB()
-const index = db.tasks.findIndex((f)=> f.id === id)
-
-if (index === -1) {
-    return res.status(404).send({"message":"Task not found"})
-}
-
-if (typeof completed !== "boolean") {
- return res.status(400).send({ message: "completed must be boolean" });
-}
-
-db.tasks[index].completed = completed
-
-writeDB(db)
-
-const changed  = db.tasks[index]
-res.status(200).send({"message":"status changed!" , changed})
-
-}
-
-const getById = (req , res) =>{
-const {id} = req.params
-
-const db = readDB()
-const find = db.tasks.find((f)=> f.id === id)
-res.json(find)
-
-}
-
-const setTitle = (req , res) => {
-const {id} = req.params
-const body = req.body
-const db = readDB()
-
-if (!id) {
-   return res.status(404).json({"message":"user is not found"})
+} catch (error) {
+    console.log(error.message);
     
 }
 
-if (!body.title) {
-   return res.status(400).json({"message":"Title is required"})
 }
 
-const index = db.tasks.findIndex((f)=> f.id === id)
-
-if (index === -1) {
-    return res.status(404).json({"message":"User is not found"})
+const getAll = async (req , res) =>{
+    const tasks = await Task.find()
+    res.json(tasks)
 }
 
-db.tasks[index].title = body.title
-writeDB(db)
+const setStatus = async (req , res) => {
+    try {
+        const {id} = req.params
+const updates = req.body
 
-const changedTask = db.tasks[index]
-res.json({"message":"Title changed" , changedTask})
+const changeUpdates = await Task.findByIdAndUpdate(
+    id,
+    updates,
+    {new:true , runValidators:true}
+)
+
+if (!changeUpdates) {
+    return res.status(400).json({"message":"Task is not found"})
+}
+
+res.status(200).json({"message":"Change succes" , changeUpdates})
+    } catch (err) {
+        console.log(err);
+        
+    }
 
 }
+
+const getById = async (req , res) =>{
+const {id} = req.params
+
+const db = readDB()
+const find = await Task.findById(id)
+
+if (!find) {
+   return res.status(404).json({"message":"Task not found"})
+}
+
+res.status(200).json(find)
+
+}
+
 
 module.exports = {
     createTask,
     getAll,
     setStatus,
     getById,
-    setTitle
+   
 }
